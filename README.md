@@ -33,3 +33,9 @@ Archivos de configuracion:
 
 -Para la instalación del sitio se debe poner el contenido de la carpeta e-site dentro de htdocs dentro del servidor (ejm: XAMPP).
 -También dentro del servidor (ejem: XAMPP) se debe colocar la carpeta moodledata.
+
+------------------------------------------------------------------------------------
+
+Nuevos archivos:
+
+En el proyecto, dentro de la carpeta prueba_e-site/block se coloca esta nueva carpeta de testblock que es un nuevo componente de la plataforma.
