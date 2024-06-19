@@ -1,5 +1,6 @@
 {
   "Version": 1,
+<<<<<<< HEAD
   "WorkspaceRootPath": "C:\\Users\\Usuario_1\\Documents\\ECU\\API_Corresponsales\\",
   "Documents": [
     {
@@ -21,6 +22,13 @@
     {
       "AbsoluteMoniker": "D:0:0:{E972093E-9D27-4B84-9886-14925CC7F287}|API_Corresponsales\\API_Corresponsales.csproj|c:\\users\\usuario_1\\documents\\ecu\\api_corresponsales\\api_corresponsales\\controllers\\ag_esp_elitecontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{E972093E-9D27-4B84-9886-14925CC7F287}|API_Corresponsales\\API_Corresponsales.csproj|solutionrelative:api_corresponsales\\controllers\\ag_esp_elitecontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+=======
+  "WorkspaceRootPath": "C:\\Proyecto\\E-SITE\\API_Corresponsales\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{E972093E-9D27-4B84-9886-14925CC7F287}|API_Corresponsales\\API_Corresponsales.csproj|c:\\proyecto\\e-site\\api_corresponsales\\api_corresponsales\\models\\facturamodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{E972093E-9D27-4B84-9886-14925CC7F287}|API_Corresponsales\\API_Corresponsales.csproj|solutionrelative:api_corresponsales\\models\\facturamodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+>>>>>>> upstream/main
     }
   ],
   "DocumentGroupContainers": [
@@ -30,7 +38,11 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
+<<<<<<< HEAD
           "SelectedChildIndex": 8,
+=======
+          "SelectedChildIndex": 4,
+>>>>>>> upstream/main
           "Children": [
             {
               "$type": "Document",
@@ -89,6 +101,7 @@
             },
             {
               "$type": "Document",
+<<<<<<< HEAD
               "DocumentIndex": 1,
               "Title": "API_Corresponsales.http",
               "DocumentMoniker": "C:\\Users\\Usuario_1\\Documents\\ECU\\API_Corresponsales\\API_Corresponsales\\API_Corresponsales.http",
@@ -111,6 +124,17 @@
               "ViewState": "AQIAAAAAAAAAAAAAAAAAAA4AAAAVAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2024-06-19T13:17:36.631Z",
+=======
+              "DocumentIndex": 0,
+              "Title": "FacturaModel.cs",
+              "DocumentMoniker": "C:\\Proyecto\\E-SITE\\API_Corresponsales\\API_Corresponsales\\Models\\FacturaModel.cs",
+              "RelativeDocumentMoniker": "API_Corresponsales\\Models\\FacturaModel.cs",
+              "ToolTip": "C:\\Proyecto\\E-SITE\\API_Corresponsales\\API_Corresponsales\\Models\\FacturaModel.cs",
+              "RelativeToolTip": "API_Corresponsales\\Models\\FacturaModel.cs",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-06-19T14:35:23.02Z",
+>>>>>>> upstream/main
               "EditorCaption": ""
             }
           ]
