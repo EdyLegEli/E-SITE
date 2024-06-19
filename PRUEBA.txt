@@ -1,0 +1,60 @@
+            if ((int)DR["FraStatus"] == 7 || (int)DR["FraStatus"] == 8)
+            {
+                //Añado la lógica para obtener mi corresponsal
+                switch (CodCorresponsal)
+                {
+                    case 1  /*"94567Z"*/:
+                        // Procesar la información específica del remitente
+                        var senderInfo = GetSenderInfo(DR);
+                        if (senderInfo != null)
+                        {
+                            // manejar la información del remitente según necesidades
+                            // Ejemplo: return $"Sender Info: {senderInfo.FullName}";
+                        }
+                        break;
+                    case 2:
+                        break;
+
+                }
+            
+            }
+
+    private SenderInfo GetSenderInfo(DataRow DR)
+    {
+        var senderInfo = new SenderInfo
+        {
+            Identification = DR["CliDNI"]?.ToString(),
+            FullName = $"{DR["CliNombre"]} {DR["CliApellidos"]}",
+            FirstName = DR["CliNombre"]?.ToString(),
+            MiddleName = "", // Si tienes un campo para el segundo nombre, puedes agregarlo aquí
+            Surname = DR["CliApellidos"]?.ToString(),
+            SecondSurname = "", // Si tienes un campo para el segundo apellido, puedes agregarlo aquí
+            PhoneNumber = DR["CliTelefono"]?.ToString(),
+            CellphoneNumber = DR["CliTelefono2"]?.ToString(),
+            Country = DR["PaisCliente"]?.ToString(),
+            State = DR["CliProvincia"]?.ToString(),
+            City = DR["CliCiudad"]?.ToString(),
+            Address = DR["CliDomicilio"]?.ToString(),
+            ZipCode = DR["CliCP"]?.ToString()
+        };
+
+        return senderInfo;
+    }
+
+    // Clase para almacenar la información del remitente
+    public class SenderInfo
+    {
+        public string Identification { get; set; }
+        public string FullName { get; set; }
+        public string FirstName { get; set; }
+        public string MiddleName { get; set; }
+        public string Surname { get; set; }
+        public string SecondSurname { get; set; }
+        public string PhoneNumber { get; set; }
+        public string CellphoneNumber { get; set; }
+        public string Country { get; set; }
+        public string State { get; set; }
+        public string City { get; set; }
+        public string Address { get; set; }
+        public string ZipCode { get; set; }
+    }
