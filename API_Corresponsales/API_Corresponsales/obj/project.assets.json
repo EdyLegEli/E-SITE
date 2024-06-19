@@ -428,19 +428,19 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\Usuario_1\\.nuget\\packages\\": {}
+    "C:\\Users\\César Espino\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\Usuario_1\\Documents\\ECU\\API_Corresponsales\\API_Corresponsales\\API_Corresponsales.csproj",
+      "projectUniqueName": "C:\\Proyecto\\E-SITE\\API_Corresponsales\\API_Corresponsales\\API_Corresponsales.csproj",
       "projectName": "API_Corresponsales",
-      "projectPath": "C:\\Users\\Usuario_1\\Documents\\ECU\\API_Corresponsales\\API_Corresponsales\\API_Corresponsales.csproj",
-      "packagesPath": "C:\\Users\\Usuario_1\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\Usuario_1\\Documents\\ECU\\API_Corresponsales\\API_Corresponsales\\obj\\",
+      "projectPath": "C:\\Proyecto\\E-SITE\\API_Corresponsales\\API_Corresponsales\\API_Corresponsales.csproj",
+      "packagesPath": "C:\\Users\\César Espino\\.nuget\\packages\\",
+      "outputPath": "C:\\Proyecto\\E-SITE\\API_Corresponsales\\API_Corresponsales\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "C:\\Users\\Usuario_1\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\César Espino\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [
