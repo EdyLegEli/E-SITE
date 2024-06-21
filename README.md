@@ -39,3 +39,11 @@ Archivos de configuracion:
 Nuevos archivos:
 
 En el proyecto, dentro de la carpeta prueba_e-site/block se coloca esta nueva carpeta de testblock que es un nuevo componente de la plataforma.
+
+--------------CONOCIMIENTOS BASICOS-------------------------------------
+
+PHP  https://www.php.net/manual/en/tutorial.php
+moodle https://docs.moodle.org/dev/Tutorial#The_skeleton_of_your_plugin
+https://docs.moodle.org/dev/Creating_a_theme_based_on_boost
+
+Enjoy coding! 
