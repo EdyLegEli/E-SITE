@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<discovery xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://schemas.xmlsoap.org/disco/">
-  <contractRef ref="http://192.168.34.55:8008/Compatible.asmx?wsdl" docRef="http://192.168.34.55:8008/Compatible.asmx" xmlns="http://schemas.xmlsoap.org/disco/scl/" />
-  <soap address="http://192.168.34.55:8008/Compatible.asmx" xmlns:q1="http://sysvega.com/" binding="q1:CompatibleSoap" xmlns="http://schemas.xmlsoap.org/disco/soap/" />
-  <soap address="http://192.168.34.55:8008/Compatible.asmx" xmlns:q2="http://sysvega.com/" binding="q2:CompatibleSoap12" xmlns="http://schemas.xmlsoap.org/disco/soap/" />
-</discovery>
