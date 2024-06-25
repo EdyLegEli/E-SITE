@@ -1,0 +1,142 @@
+---------Cambios realizados dentro de Themes/photo-----------
+
+Se crea la archivo login.php dentro del directorio theme/photo/layout con el siguiente código:
+
+login.php
+
+<?php
+defined('MOODLE_INTERNAL') || die();
+$bodyattributes = $OUTPUT->body_attributes();
+echo $OUTPUT->doctype() ?>
+<html <?php echo $OUTPUT->htmlattributes() ?>>
+<head>
+    <title><?php echo $OUTPUT->page_title() ?></title>
+    <?php echo $OUTPUT->standard_head_html() ?>
+    <link rel="stylesheet" type="text/css" href="<?php echo $CFG->wwwroot; ?>/theme/photo/scss/styles.scss">
+</head>
+<body <?php echo $bodyattributes; ?>>
+    <?php echo $OUTPUT->standard_top_of_body_html() ?>
+    <div class="login-wrapper">
+        <div class="head-image">
+                <img src="<?php echo $CFG->wwwroot; ?>/theme/photo/img/OMNEX_GROUP.png" alt="image">
+        </div>
+        <div class="login-box">
+            <h2><?php echo get_string('login'); ?></h2>
+            <?php echo $OUTPUT->main_content(); ?>
+        </div>
+    </div>
+    <?php echo $OUTPUT->standard_end_of_body_html() ?>
+</body>
+</html>
+
+------------------------------------------------------------------
+
+Se crea el archivo styles.scss dentro del directorio theme/photo/scss con el siguiente código:
+
+styles.scss
+
+body {
+    background-color: #f4f4f4;
+}
+
+.login-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;   
+}
+
+.head-image {
+    display: flex;
+    position: absolute;
+    top: 65px;
+}
+
+.login-box {
+    position: relative;
+    margin: auto;
+    width: 400px;
+    padding: 20px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.login-box h1 {
+    display: block;
+    color: #000000;
+    font-size: 30px;
+    max-height: fit-content;
+}
+
+.login-box h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    display: none;
+}
+
+.login-box form {
+    display: flex;
+    flex-direction: column;
+}
+
+.loginform {
+    background-color: white;
+}
+
+.login-box form .form-group {
+    margin-bottom: 15px;
+}
+
+.login-box form .form-group input {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.login-box form .form-group button {
+    padding: 10px;
+    background-color: #0073e6;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.login-box form .form-group button:hover {
+    background-color: #005bb5;
+}
+
+#loginbtn {
+    width: 155px;
+}
+
+.btn-secondary {
+    display: none;
+}
+
+.action-menu .dropdown-toggle {
+    display: none;
+}
+
+-------------------------------------------------------------------------------------------------------------
+
+Dentro del archivo config.php dentro de la ruta theme/photo añadir al final del archivo el siguiente código:
+
+$THEME->layouts = array(
+    // Most backwards compatible layout without the blocks - this is the layout used by default.
+    'base' => array(
+        'file' => 'default.php',
+        'regions' => array(),
+    ),
+    'login' => array(
+        'file' => 'login.php',
+        'regions' => array(),
+        'defaultregion' => '',
+    ),
+    // Other layouts can be defined here.
+);
+
+--------------------------------------------------------------------------------------------------------------
+
+Añadir la carpeta img dentro del directorio theme/photo con la foto que iría de la empresa.
