@@ -1,0 +1,641 @@
+user_team_selection.php
+
+////////Pegar esto////////////////
+<?php
+// blocks/botones_equipo/pages/team_selection.php
+
+
+require_once('../../config.php');
+require_once($CFG->libdir.'/adminlib.php');
+require_once($CFG->dirroot.'/'.$CFG->admin.'/user/lib.php');
+require_once($CFG->dirroot.'/'.$CFG->admin.'/user/user_bulk_forms.php');
+require_login();
+require_capability('moodle/site:config', context_system::instance());
+
+// Definir la clase del formulario extendiendo moodleform
+class team_selection_form extends moodleform {
+    protected function definition() {
+        $mform = $this->_form;
+        
+        // Obtener la lista de equipos disponibles
+        $teams = [
+            1 => 'Equipo 1',
+            2 => 'Equipo 2',
+            // Aquí obtendrías los equipos disponibles desde tu base de datos o desde donde sea necesario
+        ];
+
+        // Agregar el elemento select para los equipos
+        $mform->addElement('select', 'teamid', get_string('selectteam', 'core_team'), [0 => get_string('choose') . '...'] + $teams);
+        $mform->setType('teamid', PARAM_INT);
+        
+        // Agregar el botón de enviar
+        $this->add_action_buttons(false, get_string('savechanges'));
+    }
+}
+
+// Procesar la selección de equipo si se envía el formulario
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['teamid'])) {
+    $teamid = required_param('teamid', PARAM_INT);
+
+    // Aquí deberías implementar la lógica para guardar los usuarios en el equipo seleccionado
+    // Implementa la lógica para guardar los usuarios en el equipo seleccionado
+    // $SESSION->bulk_users contiene los IDs de usuario seleccionados
+    
+    // Redireccionar de vuelta a user_bulk_actions.php después de guardar
+    redirect(new moodle_url('/admin/user/user_bulk_actions.php'));
+    exit;
+}
+
+// Mostrar la página de selección de equipo
+$PAGE->set_context(context_system::instance());
+$PAGE->set_pagelayout('admin');
+$PAGE->set_url('/blocks/botones_equipo/pages/team_selection.php');
+$PAGE->set_title(get_string('selectteam', 'core_team'));
+$PAGE->set_heading(get_string('selectteam', 'core_team'));
+
+echo $OUTPUT->header();
+echo $OUTPUT->heading(get_string('selectteam', 'core_team'));
+
+$formaction = new moodle_url('/blocks/botones_equipo/pages/team_selection.php');
+
+// Crear una instancia del formulario y mostrarlo
+$teamform = new team_selection_form($formaction);
+$teamform->display();
+
+echo $OUTPUT->footer();
+
+?>
+///////////////////////////////////////////////////////
+User.php
+pegar este código ahí/////////////////
+<?php
+
+    require_once('../config.php');
+    require_once($CFG->libdir.'/adminlib.php');
+    require_once($CFG->libdir.'/authlib.php');
+    require_once($CFG->dirroot.'/user/lib.php');
+    require_once($CFG->dirroot.'/'.$CFG->admin.'/user/user_bulk_forms.php');
+
+    $delete       = optional_param('delete', 0, PARAM_INT);
+    $confirm      = optional_param('confirm', '', PARAM_ALPHANUM);   //md5 confirmation hash
+    $confirmuser  = optional_param('confirmuser', 0, PARAM_INT);
+    $acl          = optional_param('acl', '0', PARAM_INT);           // id of user to tweak mnet ACL (requires $access)
+    $suspend      = optional_param('suspend', 0, PARAM_INT);
+    $unsuspend    = optional_param('unsuspend', 0, PARAM_INT);
+    $unlock       = optional_param('unlock', 0, PARAM_INT);
+    $resendemail  = optional_param('resendemail', 0, PARAM_INT);
+
+    admin_externalpage_setup('editusers');
+
+    $sitecontext = context_system::instance();
+    $site = get_site();
+
+    $returnurl = new moodle_url('/admin/user.php');
+
+    $PAGE->set_primary_active_tab('siteadminnode');
+    $PAGE->navbar->add(get_string('userlist', 'admin'), $PAGE->url);
+
+    // The $user variable is also used outside of these if statements.
+    $user = null;
+    if ($confirmuser and confirm_sesskey()) {
+        require_capability('moodle/user:update', $sitecontext);
+        if (!$user = $DB->get_record('user', array('id'=>$confirmuser, 'mnethostid'=>$CFG->mnet_localhost_id))) {
+            throw new \moodle_exception('nousers');
+        }
+
+        $auth = get_auth_plugin($user->auth);
+
+        $result = $auth->user_confirm($user->username, $user->secret);
+
+        if ($result == AUTH_CONFIRM_OK or $result == AUTH_CONFIRM_ALREADY) {
+            redirect($returnurl);
+        } else {
+            echo $OUTPUT->header();
+            redirect($returnurl, get_string('usernotconfirmed', '', fullname($user, true)));
+        }
+
+    } else if ($resendemail && confirm_sesskey()) {
+        if (!$user = $DB->get_record('user', ['id' => $resendemail, 'mnethostid' => $CFG->mnet_localhost_id, 'deleted' => 0])) {
+            throw new \moodle_exception('nousers');
+        }
+
+        // Prevent spamming users who are already confirmed.
+        if ($user->confirmed) {
+            throw new \moodle_exception('alreadyconfirmed', 'moodle');
+        }
+
+        $returnmsg = get_string('emailconfirmsentsuccess');
+        $messagetype = \core\output\notification::NOTIFY_SUCCESS;
+        if (!send_confirmation_email($user)) {
+            $returnmsg = get_string('emailconfirmsentfailure');
+            $messagetype = \core\output\notification::NOTIFY_ERROR;
+        }
+
+        redirect($returnurl, $returnmsg, null, $messagetype);
+    } else if ($delete and confirm_sesskey()) {              // Delete a selected user, after confirmation
+        require_capability('moodle/user:delete', $sitecontext);
+
+        $user = $DB->get_record('user', array('id'=>$delete, 'mnethostid'=>$CFG->mnet_localhost_id), '*', MUST_EXIST);
+
+        if ($user->deleted) {
+            throw new \moodle_exception('usernotdeleteddeleted', 'error');
+        }
+        if (is_siteadmin($user->id)) {
+            throw new \moodle_exception('useradminodelete', 'error');
+        }
+
+        if ($confirm != md5($delete)) {
+            echo $OUTPUT->header();
+            $fullname = fullname($user, true);
+            echo $OUTPUT->heading(get_string('deleteuser', 'admin'));
+
+            $optionsyes = array('delete'=>$delete, 'confirm'=>md5($delete), 'sesskey'=>sesskey());
+            $deleteurl = new moodle_url($returnurl, $optionsyes);
+            $deletebutton = new single_button($deleteurl, get_string('delete'), 'post');
+
+            echo $OUTPUT->confirm(get_string('deletecheckfull', '', "'$fullname'"), $deletebutton, $returnurl);
+            echo $OUTPUT->footer();
+            die;
+        } else {
+            if (delete_user($user)) {
+                \core\session\manager::gc(); // Remove stale sessions.
+                redirect($returnurl, get_string('deleteduserx', 'admin', fullname($user, true)));
+            } else {
+                \core\session\manager::gc(); // Remove stale sessions.
+                echo $OUTPUT->header();
+                echo $OUTPUT->notification($returnurl, get_string('deletednot', '', fullname($user, true)));
+            }
+        }
+    } else if ($acl and confirm_sesskey()) {
+        if (!has_capability('moodle/user:update', $sitecontext)) {
+            throw new \moodle_exception('nopermissions', 'error', '', 'modify the NMET access control list');
+        }
+        if (!$user = $DB->get_record('user', array('id'=>$acl))) {
+            throw new \moodle_exception('nousers', 'error');
+        }
+        if (!is_mnet_remote_user($user)) {
+            throw new \moodle_exception('usermustbemnet', 'error');
+        }
+        $accessctrl = strtolower(required_param('accessctrl', PARAM_ALPHA));
+        if ($accessctrl != 'allow' and $accessctrl != 'deny') {
+            throw new \moodle_exception('invalidaccessparameter', 'error');
+        }
+        $aclrecord = $DB->get_record('mnet_sso_access_control', array('username'=>$user->username, 'mnet_host_id'=>$user->mnethostid));
+        if (empty($aclrecord)) {
+            $aclrecord = new stdClass();
+            $aclrecord->mnet_host_id = $user->mnethostid;
+            $aclrecord->username = $user->username;
+            $aclrecord->accessctrl = $accessctrl;
+            $DB->insert_record('mnet_sso_access_control', $aclrecord);
+        } else {
+            $aclrecord->accessctrl = $accessctrl;
+            $DB->update_record('mnet_sso_access_control', $aclrecord);
+        }
+        $mnethosts = $DB->get_records('mnet_host', null, 'id', 'id,wwwroot,name');
+        redirect($returnurl);
+
+    } else if ($suspend and confirm_sesskey()) {
+        require_capability('moodle/user:update', $sitecontext);
+
+        if ($user = $DB->get_record('user', array('id'=>$suspend, 'mnethostid'=>$CFG->mnet_localhost_id, 'deleted'=>0))) {
+            if (!is_siteadmin($user) and $USER->id != $user->id and $user->suspended != 1) {
+                $user->suspended = 1;
+                // Force logout.
+                \core\session\manager::kill_user_sessions($user->id);
+                user_update_user($user, false);
+            }
+        }
+        redirect($returnurl);
+
+    } else if ($unsuspend and confirm_sesskey()) {
+        require_capability('moodle/user:update', $sitecontext);
+
+        if ($user = $DB->get_record('user', array('id'=>$unsuspend, 'mnethostid'=>$CFG->mnet_localhost_id, 'deleted'=>0))) {
+            if ($user->suspended != 0) {
+                $user->suspended = 0;
+                user_update_user($user, false);
+            }
+        }
+        redirect($returnurl);
+
+    } else if ($unlock and confirm_sesskey()) {
+        require_capability('moodle/user:update', $sitecontext);
+
+        if ($user = $DB->get_record('user', array('id'=>$unlock, 'mnethostid'=>$CFG->mnet_localhost_id, 'deleted'=>0))) {
+            login_unlock_account($user);
+        }
+        redirect($returnurl);
+    }
+
+    echo $OUTPUT->header();
+
+    if (has_capability('moodle/user:create', $sitecontext)) {
+        echo html_writer::start_div('d-flex mb-2');
+        $url = new moodle_url('/user/editadvanced.php', ['id' => -1]);
+        echo html_writer::link($url, get_string('addnewuser', 'moodle'), [
+            'class' => 'btn btn-primary ml-auto',
+            'data-action' => 'add-user',
+        ]);
+        echo html_writer::end_div();
+    }
+
+    echo html_writer::start_div('', ['data-region' => 'report-user-list-wrapper']);
+
+    $bulkactions = new user_bulk_action_form(new moodle_url('/admin/user/user_bulk.php'),
+        ['excludeactions' => ['displayonpage', 'download'], 'passuserids' => true, 'hidesubmit' => true],
+        'post', '',
+        ['id' => 'user-bulk-action-form']);
+    $bulkactions->set_data(['returnurl' => $PAGE->url->out_as_local_url(false)]);
+
+    $report = \core_reportbuilder\system_report_factory::create(\core_admin\reportbuilder\local\systemreports\users::class,
+        context_system::instance(), parameters: ['withcheckboxes' => $bulkactions->has_bulk_actions()]);
+    echo $report->output();
+
+    if ($bulkactions->has_bulk_actions()) {
+        $PAGE->requires->js_call_amd('core_admin/bulk_user_actions', 'init');
+        $bulkactions->display();
+    }
+
+    echo html_writer::end_div();
+
+    echo $OUTPUT->footer();
+//////////////////////////////////////////////////////////
+user_bulk////////////////
+Pegar este código ahí 
+
+<?php
+// user_bulk_actions.php
+
+require_once('../../config.php');
+require_once($CFG->libdir.'/adminlib.php');
+require_once($CFG->dirroot.'/'.$CFG->admin.'/user/lib.php');
+require_once($CFG->dirroot.'/'.$CFG->admin.'/user/user_bulk_forms.php');
+
+admin_externalpage_setup('userbulk');
+
+if (!isset($SESSION->bulk_users)) {
+    $SESSION->bulk_users = array();
+}
+
+// Crear el formulario de filtros de usuario
+$ufiltering = new user_filtering();
+
+// Crear el formulario de operaciones masivas
+$actionform = new user_bulk_action_form();
+$actionform->set_data(['returnurl' => $PAGE->url->out_as_local_url(false)]);
+
+if ($data = $actionform->get_data()) {
+    if ($data->passuserids) {
+        // Esto significa que llamamos al formulario desde /admin/user.php u similar y los userids deben tomarse de los datos del formulario
+        // y no de $SESSION->bulk_users. Para compatibilidad hacia atrás, aún establecemos $SESSION->bulk_users.
+        $users = preg_split('/,/', $data->userids, -1, PREG_SPLIT_NO_EMPTY);
+        $SESSION->bulk_users = array_combine($users, $users);
+    }
+    
+    // Verificar si se debe realizar una acción y hacerlo
+    $bulkactions = $actionform->get_actions();
+    if (array_key_exists($data->action, $bulkactions)) {
+        redirect(new moodle_url($bulkactions[$data->action]->url, ['returnurl' => $data->returnurl ?: null]));
+    }
+}
+
+$userbulkform = new user_bulk_form(null, get_selection_data($ufiltering));
+
+if ($data = $userbulkform->get_data()) {
+    if (!empty($data->addall)) {
+        add_selection_all($ufiltering);
+    } elseif (!empty($data->addsel)) {
+        if (!empty($data->ausers)) {
+            if (in_array(0, $data->ausers)) {
+                add_selection_all($ufiltering);
+            } else {
+                foreach ($data->ausers as $userid) {
+                    if ($userid == -1) {
+                        continue;
+                    }
+                    if (!isset($SESSION->bulk_users[$userid])) {
+                        $SESSION->bulk_users[$userid] = $userid;
+                    }
+                }
+            }
+        }
+    } elseif (!empty($data->removeall)) {
+        $SESSION->bulk_users = array();
+    } elseif (!empty($data->removesel)) {
+        if (!empty($data->susers)) {
+            if (in_array(0, $data->susers)) {
+                $SESSION->bulk_users = array();
+            } else {
+                foreach ($data->susers as $userid) {
+                    if ($userid == -1) {
+                        continue;
+                    }
+                    unset($SESSION->bulk_users[$userid]);
+                }
+            }
+        }
+    }
+
+    // Resetear las selecciones del formulario
+    unset($_POST);
+    $userbulkform = new user_bulk_form(null, get_selection_data($ufiltering));
+}
+
+echo $OUTPUT->header();
+
+$ufiltering->display_add();
+$ufiltering->display_active();
+
+$userbulkform->display();
+
+$actionform->display();
+
+echo $OUTPUT->footer();
+?>
+/////////////////user_bulk_forms.php//////////////////////
+Pegar ahí este código
+
+}<?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+/**
+ * Bulk user action forms
+ *
+ * @package    core
+ * @copyright  Moodle
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
+defined('MOODLE_INTERNAL') || die();
+
+require_once($CFG->libdir.'/formslib.php');
+require_once($CFG->libdir.'/datalib.php');
+
+/**
+ * Bulk user action form
+ *
+ * @copyright  Moodle
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class user_bulk_action_form extends moodleform {
+
+    /** @var bool */
+    protected $hasbulkactions = false;
+
+    /** @var array|null */
+    protected $actions = null;
+
+    /**
+     * Returns an array of action_link's of all bulk actions available for this user.
+     *
+     * @param bool $flatlist whether to return a flat list (for easier searching) or a list with
+     *     option groups that can be used to build a select element
+     * @return array of action_link objects
+     */
+    public function get_actions(bool $flatlist = true): array {
+        if ($this->actions === null) {
+            $this->actions = $this->build_actions();
+            $this->hasbulkactions = !empty($this->actions);
+        }
+        if ($flatlist) {
+            return array_reduce($this->actions, fn($carry, $item) => $carry + $item, []);
+        }
+        return $this->actions;
+    }
+
+    /**
+     * Builds the list of bulk user actions available for this user.
+     *
+     * @return array
+     */
+    protected function build_actions(): array {
+
+        global $CFG;
+
+        $canaccessbulkactions = has_any_capability(['moodle/user:update', 'moodle/user:delete'], context_system::instance());
+
+        $syscontext = context_system::instance();
+        $actions = [];
+        if (has_capability('moodle/user:update', $syscontext)) {
+            $actions['confirm'] = new action_link(
+                new moodle_url('/admin/user/user_bulk_confirm.php'),
+                get_string('confirm'));
+        }
+        if ($canaccessbulkactions && has_capability('moodle/site:readallmessages', $syscontext) && !empty($CFG->messaging)) {
+            $actions['message'] = new action_link(
+                new moodle_url('/admin/user/user_bulk_message.php'),
+                get_string('messageselectadd'));
+        }
+        if (has_capability('moodle/user:delete', $syscontext)) {
+            $actions['delete'] = new action_link(
+                new moodle_url('/admin/user/user_bulk_delete.php'),
+                get_string('delete'));
+        }
+        if ($canaccessbulkactions) {
+            $actions['displayonpage'] = new action_link(
+                new moodle_url('/admin/user/user_bulk_display.php'),
+                get_string('displayonpage'));
+        }
+
+        if (has_capability('moodle/user:update', $syscontext)) {
+            $actions['download'] = new action_link(
+                new moodle_url('/admin/user/user_bulk_download.php'),
+                get_string('download', 'admin'));
+        }
+
+        if (has_capability('moodle/user:update', $syscontext)) {
+            $actions['forcepasswordchange'] = new action_link(
+                new moodle_url('/admin/user/user_bulk_forcepasswordchange.php'),
+                get_string('forcepasswordchange'));
+        }
+        if ($canaccessbulkactions && has_capability('moodle/cohort:assign', $syscontext)) {
+            $actions['addtocohort'] = new action_link(
+                new moodle_url('/admin/user/user_bulk_cohortadd.php'),
+                get_string('bulkadd', 'core_cohort'));
+        }
+
+        if ($canaccessbulkactions && has_capability('moodle/cohort:assign', $syscontext)) {
+            $actions['addteam'] = new action_link(
+                new moodle_url('/admin/user/user_team_selection.php'),
+                get_string('addteam', 'addteam')
+            );
+        }
+        
+
+
+        // Collect all bulk user actions.
+        $hook = new \core_user\hook\extend_bulk_user_actions();
+
+        // Add actions from core.
+        foreach ($actions as $identifier => $action) {
+            $hook->add_action($identifier, $action);
+        }
+
+        // Add actions from the legacy callback 'bulk_user_actions'.
+        $moreactions = get_plugins_with_function('bulk_user_actions', 'lib.php', true, true);
+        foreach ($moreactions as $plugintype => $plugins) {
+            foreach ($plugins as $pluginfunction) {
+                $pluginactions = $pluginfunction();
+                foreach ($pluginactions as $identifier => $action) {
+                    $hook->add_action($identifier, $action);
+                }
+            }
+        }
+
+        // Any plugin can append user bulk actions to this list by implementing a hook callback.
+        \core\di::get(\core\hook\manager::class)->dispatch($hook);
+
+        // This method may be called from 'Bulk actions' and 'Browse user list' pages. Some actions
+        // may be irrelevant in one of the contexts and they can be excluded by specifying the
+        // 'excludeactions' customdata.
+        $excludeactions = $this->_customdata['excludeactions'] ?? [];
+        foreach ($excludeactions as $excludeaction) {
+            $hook->add_action($excludeaction, null);
+        }
+        return $hook->get_actions();
+    }
+
+    /**
+     * Form definition
+     */
+    public function definition() {
+        $mform =& $this->_form;
+
+        // Most bulk actions perform a redirect on selection, so we shouldn't trigger formchange warnings (specifically because
+        // the user must have _already_ changed the current form by selecting users to perform the action on).
+        $mform->disable_form_change_checker();
+
+        $mform->addElement('hidden', 'returnurl');
+        $mform->setType('returnurl', PARAM_LOCALURL);
+
+        // When 'passuserids' is specified in the customdata, the user ids are expected in the form
+        // data rather than in the $SESSION->bulk_users .
+        $passuserids = !empty($this->_customdata['passuserids']);
+        $mform->addElement('hidden', 'passuserids', $passuserids);
+        $mform->setType('passuserids', PARAM_BOOL);
+
+        $mform->addElement('hidden', 'userids');
+        $mform->setType('userids', PARAM_SEQUENCE);
+
+        $actions = ['' => [0 => get_string('choose') . '...']];
+        $bulkactions = $this->get_actions(false);
+        foreach ($bulkactions as $category => $categoryactions) {
+            $actions[$category] = array_map(fn($action) => $action->text, $categoryactions);
+        }
+        $objs = array();
+        $objs[] = $selectel = $mform->createElement('selectgroups', 'action', get_string('userbulk', 'admin'), $actions);
+        $selectel->setHiddenLabel(true);
+        if (empty($this->_customdata['hidesubmit'])) {
+            $objs[] =& $mform->createElement('submit', 'doaction', get_string('go'));
+        }
+        $mform->addElement('group', 'actionsgrp', get_string('withselectedusers'), $objs, ' ', false);
+    }
+
+    /**
+     * Is there at least one available bulk action in this form
+     *
+     * @return bool
+     */
+    public function has_bulk_actions(): bool {
+        return $this->hasbulkactions;
+    }
+}
+
+/**
+ * Bulk user form
+ *
+ * @copyright  Moodle
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class user_bulk_form extends moodleform {
+
+    /**
+     * Form definition
+     */
+    public function definition() {
+
+        $mform =& $this->_form;
+        $acount =& $this->_customdata['acount'];
+        $scount =& $this->_customdata['scount'];
+        $ausers =& $this->_customdata['ausers'];
+        $susers =& $this->_customdata['susers'];
+        $total  =& $this->_customdata['total'];
+
+        $achoices = array();
+        $schoices = array();
+
+        if (is_array($ausers)) {
+            if ($total == $acount) {
+                $achoices[0] = get_string('allusers', 'bulkusers', $total);
+            } else {
+                $a = new stdClass();
+                $a->total  = $total;
+                $a->count = $acount;
+                $achoices[0] = get_string('allfilteredusers', 'bulkusers', $a);
+            }
+            $achoices = $achoices + $ausers;
+
+            if ($acount > MAX_BULK_USERS) {
+                $achoices[-1] = '...';
+            }
+
+        } else {
+            $achoices[-1] = get_string('nofilteredusers', 'bulkusers', $total);
+        }
+
+        if (is_array($susers)) {
+            $a = new stdClass();
+            $a->total  = $total;
+            $a->count = $scount;
+            $schoices[0] = get_string('allselectedusers', 'bulkusers', $a);
+            $schoices = $schoices + $susers;
+
+            if ($scount > MAX_BULK_USERS) {
+                $schoices[-1] = '...';
+            }
+
+        } else {
+            $schoices[-1] = get_string('noselectedusers', 'bulkusers');
+        }
+
+        $mform->addElement('header', 'users', get_string('usersinlist', 'bulkusers'));
+
+        $objs = array();
+        $objs[0] =& $mform->createElement('select', 'ausers', get_string('available', 'bulkusers'), $achoices, 'size="15"');
+        $objs[0]->setMultiple(true);
+        $objs[1] =& $mform->createElement('select', 'susers', get_string('selected', 'bulkusers'), $schoices, 'size="15"');
+        $objs[1]->setMultiple(true);
+
+        $grp =& $mform->addElement('group', 'usersgrp', get_string('users', 'bulkusers'), $objs, ' ', false);
+        $mform->addHelpButton('usersgrp', 'users', 'bulkusers');
+
+        $mform->addElement('static', 'comment');
+
+        $objs = array();
+        $objs[] =& $mform->createElement('submit', 'addsel', get_string('addsel', 'bulkusers'));
+        $objs[] =& $mform->createElement('submit', 'removesel', get_string('removesel', 'bulkusers'));
+        $grp =& $mform->addElement('group', 'buttonsgrp', get_string('selectedlist', 'bulkusers'), $objs, null, false);
+        $mform->addHelpButton('buttonsgrp', 'selectedlist', 'bulkusers');
+        $objs = array();
+        $objs[] =& $mform->createElement('submit', 'addall', get_string('addall', 'bulkusers'));
+        $objs[] =& $mform->createElement('submit', 'removeall', get_string('removeall', 'bulkusers'));
+        $grp =& $mform->addElement('group', 'buttonsgrp2', '', $objs, null, false);
+
+        $renderer =& $mform->defaultRenderer();
+        $template = '<label class="qflabel" style="vertical-align:top">{label}</label> {element}';
+        $renderer->setGroupElementTemplate($template, 'usersgrp');
+    }
+}
