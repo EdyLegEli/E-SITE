@@ -46,4 +46,10 @@ PHP  https://www.php.net/manual/en/tutorial.php
 moodle https://docs.moodle.org/dev/Tutorial#The_skeleton_of_your_plugin
 https://docs.moodle.org/dev/Creating_a_theme_based_on_boost
 
-Enjoy coding! 
+Enjoy coding!
+
+-------------------------------------------------------------------------
+
+Nuevos archivos 25/06/2024
+
+Cambios_realizados_en_theme_photos
